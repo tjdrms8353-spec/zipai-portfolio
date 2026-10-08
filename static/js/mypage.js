@@ -12,6 +12,7 @@
   const inquiryCount = document.getElementById('mypageInquiryCount');
   const inquiries = document.getElementById('mypageInquiries');
   const logoutButton = document.getElementById('mypageLogout');
+  const withdrawButton = document.getElementById('mypageWithdraw');
   const diagnosis = document.getElementById('mypageDiagnosis');
   const notifications = document.getElementById('mypageNotifications');
   const readAllNotifications = document.getElementById('mypageReadAllNotifications');
@@ -193,5 +194,46 @@
     window.location.href = auth.resolvePage('login.html');
   });
 
+
+  if (withdrawButton) {
+    withdrawButton.addEventListener('click', async function () {
+      const confirmed = window.confirm(
+        '회원 정보와 소셜 로그인 연결이 삭제 처리됩니다. 게시물 등은 운영 정책에 따라 보관될 수 있습니다. 탈퇴하시겠습니까?'
+      );
+      if (!confirmed) return;
+
+      withdrawButton.disabled = true;
+
+      async function requestWithdrawal(password) {
+        return fetch('/api/account', {
+          method: 'DELETE',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: password || '' })
+        });
+      }
+
+      try {
+        let response = await requestWithdrawal('');
+
+        if (response.status === 401) {
+          const password = window.prompt('일반 회원은 현재 비밀번호를 입력해 주세요.');
+          if (password === null) return;
+          response = await requestWithdrawal(password);
+        }
+
+        if (!response.ok) {
+          throw new Error('회원 탈퇴를 처리하지 못했습니다.');
+        }
+
+        window.alert('회원 탈퇴가 완료되었습니다.');
+        window.location.href = '/';
+      } catch (error) {
+        window.alert(error.message || '회원 탈퇴를 처리하지 못했습니다.');
+      } finally {
+        withdrawButton.disabled = false;
+      }
+    });
+  }
   render();
 })();

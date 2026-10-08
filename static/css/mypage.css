@@ -23,6 +23,9 @@
 .mypage-summary dd { margin: 4px 0 0; color: var(--color-primary); font-size: 21px; font-weight: 700; }
 .mypage-logout { width: 100%; min-height: 46px; border: 1px solid #d9e0ea; border-radius: 9px; color: #526176; background: var(--color-white); cursor: pointer; font-weight: 700; }
 .mypage-logout:hover { border-color: #e35d5d; color: #c23f3f; background: #fff7f7; }
+.mypage-withdraw { margin-top: 14px; border: 0; color: #9b4a4a; background: transparent; cursor: pointer; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
+.mypage-withdraw:hover { color: #c23f3f; }
+.mypage-withdraw:disabled { cursor: wait; opacity: .55; }
 
 .mypage-content { display: grid; gap: 24px; }
 .mypage-section { padding: 28px; }
@@ -94,7 +97,7 @@
   .mypage-grid { grid-template-columns: 1fr; }
   .mypage-profile { display: grid; grid-template-columns: auto 1fr; column-gap: 20px; text-align: left; }
   .mypage-avatar { grid-row: 1 / 4; margin: 0; }
-  .mypage-summary, .mypage-logout { grid-column: 1 / -1; }
+  .mypage-summary, .mypage-logout, .mypage-withdraw { grid-column: 1 / -1; }
 }
 
 @media (max-width: 767.98px) {
