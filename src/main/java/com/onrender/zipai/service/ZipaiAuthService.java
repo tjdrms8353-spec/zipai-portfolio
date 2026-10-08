@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,10 +19,16 @@ public class ZipaiAuthService {
 
     private final ZipaiUserRepository users;
     private final ZipaiPasswordService passwords;
+    private final JdbcTemplate jdbc;
 
-    public ZipaiAuthService(ZipaiUserRepository users, ZipaiPasswordService passwords) {
+    public ZipaiAuthService(
+        ZipaiUserRepository users,
+        ZipaiPasswordService passwords,
+        JdbcTemplate jdbc
+    ) {
         this.users = users;
         this.passwords = passwords;
+        this.jdbc = jdbc;
     }
 
     public ZipaiUser required(HttpSession session) {
@@ -189,12 +196,23 @@ public class ZipaiAuthService {
     @Transactional
     public void withdraw(Map<String, Object> body, HttpSession session) {
         ZipaiUser user = required(session);
-        if (!passwords.matches(text(body, "password"), user.getPasswordHash())) {
+
+        Integer socialAccountCount = jdbc.queryForObject(
+            "SELECT COUNT(*) FROM social_accounts WHERE user_id = ?",
+            Integer.class,
+            user.getId()
+        );
+        boolean socialUser = socialAccountCount != null && socialAccountCount > 0;
+
+        if (!socialUser && !passwords.matches(text(body, "password"), user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "비밀번호가 올바르지 않습니다.");
         }
 
+        jdbc.update("DELETE FROM social_accounts WHERE user_id = ?", user.getId());
+
         user.setStatus("deleted");
         user.setDeletedAt(LocalDateTime.now());
+        user.setUsername("deleted_" + user.getId());
         user.setEmail("deleted+" + user.getId() + "@zipai.invalid");
         user.setPhone("");
         user.setUpdatedAt(LocalDateTime.now());
